@@ -16,7 +16,7 @@ public static class CubeColorHelper
             case CubeColor.Red:
                 return Color.red;
             case CubeColor.Orange:
-                return new Color(1f, 0.5f, 0f); // Оранжевый
+                return new Color(1f, 0.5f, 0f);
             case CubeColor.Blue:
                 return Color.blue;
             case CubeColor.Green:
@@ -35,7 +35,7 @@ public static class CubeColorHelper
         if (cubeColor == Color.red)
             return CubeColor.Red;
         if (cubeColor == new Color(1f, 0.5f, 0f))
-            return CubeColor.Orange; // Оранжевый
+            return CubeColor.Orange; 
         if (cubeColor == Color.blue)
             return CubeColor.Blue;
         if (cubeColor == Color.green)

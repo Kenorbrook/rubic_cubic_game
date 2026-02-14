@@ -1,11 +1,17 @@
+using BattleSystem;
 using UnityEngine;
-[System.Serializable]
-public class DamageEffect : Effect
-{
-    public int value;
 
-    public override void Apply(PatternContext context)
+namespace Effects
+{
+
+    [System.Serializable]
+    public class DamageEffect : Effect
     {
-        //context.enemy.TakeDamage(value);
+        public int value;
+
+        public override void Apply(PatternContext context)
+        {
+            //context.enemy.TakeDamage(value);
+        }
     }
 }

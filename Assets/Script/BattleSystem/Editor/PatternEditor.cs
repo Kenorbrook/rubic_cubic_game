@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BattleSystem;
+using Effects;
 using UnityEditor;
 using UnityEngine;
 

@@ -2,15 +2,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// View: отображение кубика Рубика (6 граней)
-/// Связывает FaceView с ViewModel и управляет анимациями
-/// </summary>
 public class RubikCubeView : MonoBehaviour
 {
     [SerializeField] float _normalSpeed = 1f;
     [SerializeField] float _shuffleSpeed = 3f;
+    
+    
     [Header("Face Views")]
+    
     [SerializeField]
     private CubeFaceView _frontFaceView;
 
@@ -30,10 +29,12 @@ public class RubikCubeView : MonoBehaviour
     private CubeFaceView _bottomFaceView;
 
     [Header("Input")]
+    
     [SerializeField]
     private List<InputController> _inputControllers;
 
     [Header("UI")]
+    
     [SerializeField]
     private Button _shuffleButton;
 
@@ -41,27 +42,27 @@ public class RubikCubeView : MonoBehaviour
     private Button _resetButton;
 
     private RubikCubeViewModel _viewModel;
-    public RubikCubeViewModel ViewModel => _viewModel;
     private Dictionary<CubeSide, CubeFaceView> _faceViews;
 
-    private CubeRotationEvents _cubeRotationEvents;
 
     private int _pendingAnimations;
 
-    private void Awake()
+  
+
+    public void Initialize(RubikCubeViewModel viewModel)
     {
+        _viewModel = viewModel;
         InitializeFaceViews();
         SetupUI();
         StartCoroutine(InitializeViewModel());
     }
+    
+    
+    #region Init
 
-
-   
-    // ---------------- INIT ----------------
-
+    
     private void InitializeFaceViews()
     {
-        _cubeRotationEvents = new CubeRotationEvents();
         _faceViews = new Dictionary<CubeSide, CubeFaceView>
         {
             {CubeSide.Front, _frontFaceView},
@@ -79,17 +80,16 @@ public class RubikCubeView : MonoBehaviour
 
     private System.Collections.IEnumerator InitializeViewModel()
     {
-        _viewModel = new RubikCubeViewModel();
-
+        _viewModel.OnInputBlockRequested += BlockInput;
+        _viewModel.OnInputUnblockRequested += UnblockInput;
+        _viewModel.OnInputUnblockRequested += HandleShuffleCompleted;
         _viewModel.OnLayerRotationStarted += HandleLayerRotationStarted;
-        _viewModel.OnShuffleCompleted += HandleShuffleCompleted;
 
-        _viewModel.OnRotationCompleted += HandleRotationCompleted;
         _viewModel.OnCubeDataChanged += HandleFaceUpdated;
         _viewModel.OnCubeSolved += HandleCubeSolved;
 
         UpdateAllFaces(false);
-        
+
         yield return null;
         OnShuffleClicked();
     }
@@ -107,34 +107,35 @@ public class RubikCubeView : MonoBehaviour
     {
         if (_viewModel != null)
         {
+            _viewModel.Dispose();
+            _viewModel.OnInputBlockRequested -= BlockInput;
+            _viewModel.OnInputUnblockRequested -= UnblockInput;
+            _viewModel.OnInputUnblockRequested -= HandleShuffleCompleted;
             _viewModel.OnLayerRotationStarted -= HandleLayerRotationStarted;
-            _viewModel.OnRotationCompleted -= HandleRotationCompleted;
             _viewModel.OnCubeDataChanged -= HandleFaceUpdated;
             _viewModel.OnCubeSolved -= HandleCubeSolved;
         }
     }
 
-    // ---------------- INPUT API ----------------
+    #endregion
 
+    public bool RequestRowRotation(int rowIndex, RotationDirection direction, MoveSource source)
+    {
+        return _viewModel.TryRotateLayer(CubeAxis.Y, rowIndex, direction, source);
+    }
+
+    public bool RequestColumnRotation(int colIndex, RotationDirection direction, MoveSource source)
+    {
+        return _viewModel.TryRotateLayer(CubeAxis.X, colIndex, direction, source);
+    }
+    
     private void HandleShuffleCompleted()
     {
-        SetAnimationSpeed(_normalSpeed); // назад к нормальной скорости
+        SetAnimationSpeed(_normalSpeed); 
     }
-
-    public bool RequestRowRotation(int rowIndex, RotationDirection direction)
-    {
-        return _viewModel.TryRotateLayer(CubeAxis.Y, rowIndex, direction);
-    }
-
-    public bool RequestColumnRotation(int colIndex, RotationDirection direction)
-    {
-        return _viewModel.TryRotateLayer(CubeAxis.X, colIndex, direction);
-    }
-
-    // ---------------- VIEWMODEL EVENTS ----------------
+    
     private void HandleLayerRotationStarted(CubeAxis axis, int index, RotationDirection dir)
     {
-        BlockInput();
         _pendingAnimations = 0;
         if (axis == CubeAxis.Y)
             AnimateLayerY(index, dir);
@@ -147,16 +148,12 @@ public class RubikCubeView : MonoBehaviour
     
     private void AnimateLayerY(int row, RotationDirection dir)
     {
-        // Front
         AnimateRow(_frontFaceView, row, dir);
 
-        // Left 
         AnimateRow(_leftFaceView, row, dir);
 
-        // Right
         AnimateRow(_rightFaceView, row, dir);
 
-        // крайние → вращаем грань
         if (row == 0)
             AnimateFace(_topFaceView, Invert(dir));
         else if (row == 2)
@@ -165,16 +162,12 @@ public class RubikCubeView : MonoBehaviour
     
     private void AnimateLayerX(int col, RotationDirection dir)
     {
-        // Front
         AnimateColumn(_frontFaceView, col, dir);
 
-        // Top
         AnimateColumn(_topFaceView, col, dir);
 
-        // Bottom 
         AnimateColumn(_bottomFaceView, col, dir);
 
-        // крайние → вращаем грань
         if (col == 0)
             AnimateFace(_leftFaceView, dir);
         else if (col == 2)
@@ -188,12 +181,10 @@ public class RubikCubeView : MonoBehaviour
 
         
 
-        // Bottom 
         AnimateColumn(_rightFaceView, col, dir);
         
         AnimateColumn(_leftFaceView, col, dir);
 
-        // крайние → вращаем грань
          if (col == 2)
             AnimateFace(_frontFaceView, dir);
     }
@@ -232,14 +223,9 @@ public class RubikCubeView : MonoBehaviour
         if (_pendingAnimations <= 0)
         {
             _viewModel.CompleteRotation();
-            UnblockInput();
         }
     }
 
-    private void HandleRotationCompleted()
-    {
-        // логика уже завершена выше
-    }
 
     private void HandleFaceUpdated(Dictionary<CubeSide, CubeFaceModel> models)
     {
@@ -252,7 +238,8 @@ public class RubikCubeView : MonoBehaviour
             }
         }
     }
-    public void SetAnimationSpeed(float multiplier)
+
+    private void SetAnimationSpeed(float multiplier)
     {
         foreach (var face in _faceViews.Values)
             face.SetSpeed(multiplier);
@@ -263,7 +250,6 @@ public class RubikCubeView : MonoBehaviour
         Debug.Log("Cube solved!");
     }
 
-    // ---------------- UPDATE ----------------
 
     private void UpdateAllFaces(bool animate)
     {
@@ -273,8 +259,6 @@ public class RubikCubeView : MonoBehaviour
             kv.Value.UpdateDisplay(model, animate);
         }
     }
-
-    // ---------------- UI ----------------
 
     private void OnShuffleClicked()
     {
@@ -288,7 +272,6 @@ public class RubikCubeView : MonoBehaviour
         UpdateAllFaces(false);
     }
 
-    // ---------------- INPUT BLOCK ----------------
 
     private void BlockInput()
     {

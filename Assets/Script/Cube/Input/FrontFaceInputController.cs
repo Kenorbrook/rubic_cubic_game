@@ -49,7 +49,6 @@ public class FrontFaceInputController : InputController
             return;
         }
 
-        Debug.Log($"Swipe detected: {direction} at position {startPosition}");
 
         // Определяем локальную позицию на грани
         Vector2 localPoint;
@@ -77,7 +76,7 @@ public class FrontFaceInputController : InputController
                 ? RotationDirection.Clockwise
                 : RotationDirection.CounterClockwise;
 
-            success = _cubeView.RequestRowRotation(row, rotDir);
+            success = _cubeView.RequestRowRotation(row, rotDir, MoveSource.User);
         }
         else if (direction == SwipeDirection.Up || direction == SwipeDirection.Down)
         {
@@ -86,7 +85,7 @@ public class FrontFaceInputController : InputController
                 ? RotationDirection.Clockwise
                 : RotationDirection.CounterClockwise;
 
-            success = _cubeView.RequestColumnRotation(col, rotDir);
+            success = _cubeView.RequestColumnRotation(col, rotDir, MoveSource.User);
         }
 
         if (success)

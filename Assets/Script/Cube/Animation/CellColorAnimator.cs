@@ -7,22 +7,17 @@ using UnityEngine.UI;
 /// </summary>
 public class CellColorAnimator : MonoBehaviour
 {
-    private Image _cellImage;
     [SerializeField] private float _colorTransitionDuration = 0.2f;
+    
+    private Image _cellImage;
 
     private Coroutine _colorTransition;
 
-    /// <summary>
-    /// Инициализация аниматора с ссылкой на Image
-    /// </summary>
     public void Initialize(Image cellImage)
     {
         _cellImage = cellImage;
     }
 
-    /// <summary>
-    /// Плавно изменить цвет ячейки
-    /// </summary>
     public void AnimateColorChange(Color targetColor)
     {
         if (_colorTransition != null)
@@ -33,9 +28,6 @@ public class CellColorAnimator : MonoBehaviour
         _colorTransition = StartCoroutine(ColorTransitionCoroutine(targetColor));
     }
 
-    /// <summary>
-    /// Установить цвет мгновенно
-    /// </summary>
     public void SetColorImmediate(Color color)
     {
         if (_colorTransition != null)
@@ -50,9 +42,6 @@ public class CellColorAnimator : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Корутина для плавного перехода цвета
-    /// </summary>
     private IEnumerator ColorTransitionCoroutine(Color targetColor)
     {
         if (_cellImage == null)

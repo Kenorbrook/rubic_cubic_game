@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pattern
   cells: 020000000600000006000000020000000600000006000000020000000600000006000000
   effects:
-  - rid: 6096917489938595907
+  - rid: 6096917644983140419
   references:
     version: 2
     RefIds:
-    - rid: 6096917489938595907
-      type: {class: DamageEffect, ns: , asm: Assembly-CSharp}
+    - rid: 6096917644983140419
+      type: {class: DamageEffect, ns: Effects, asm: Assembly-CSharp}
       data:
-        value: 27
+        value: 0

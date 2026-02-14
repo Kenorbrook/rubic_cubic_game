@@ -1,102 +1,93 @@
 using System;
 using System.Collections.Generic;
+using BattleSystem;
 using UnityEngine;
 
 public class RubikCubeViewModel
 {
+    public bool IsAnimating => _isAnimating;
+
+    public event Action<MoveSource> OnLogicalMoveCompleted;
+    public event Action OnCubeSolved;
+    public event Action OnInputBlockRequested;
+    public event Action OnInputUnblockRequested;
+    public event Action<CubeAxis, int, RotationDirection> OnLayerRotationStarted;
+    public event Action<Dictionary<CubeSide, CubeFaceModel>> OnCubeDataChanged;
+
+
     private RubikCubeModel _model;
     private bool _isAnimating;
 
-    // ================= EVENTS FOR VIEW =================
 
-    // Вращение слоя: ось, слой (0-2), направление
-    public event Action<CubeAxis, int, RotationDirection> OnLayerRotationStarted;
-
-    // Когда модель уже обновлена и можно перерисовать цвета
-    public event Action<Dictionary<CubeSide, CubeFaceModel>> OnCubeDataChanged;
-    
     private Queue<(CubeAxis axis, int layer, RotationDirection dir)> _shuffleQueue;
-    private bool _isShuffling;
 
+    private MoveSource _currentMoveSource;
+    private ICubeMatcher _matcher;
+    private IPatternApplier _patternApplier;
 
-    public event Action OnRotationCompleted;
-    public event Action OnCubeSolved;
-
-    public event Action OnShuffleCompleted;
-    public bool IsAnimating => _isAnimating;
-
-    // ================= INIT =================
-
-    public RubikCubeViewModel()
+    public RubikCubeViewModel(RubikCubeModel model)
     {
-        _model = new RubikCubeModel();
+        _model = model;
         _isAnimating = false;
     }
 
-    // ================= DATA =================
+    public void Dispose()
+    {
+        OnLogicalMoveCompleted -= MoveComplete;
+    }
+
+    public void Bind(ICubeMatcher matcher, IPatternApplier patternApplier)
+    {
+        _matcher = matcher;
+        _patternApplier = patternApplier;
+        OnLogicalMoveCompleted += MoveComplete;
+    }
 
     public CubeFaceModel GetFaceData(CubeSide side)
     {
         return _model.GetFace(side);
     }
 
-    // ================= ROTATION API =================
-
-    public bool TryRotateLayer(CubeAxis axis, int layer, RotationDirection dir)
+    public bool TryRotateLayer(CubeAxis axis, int layer, RotationDirection dir, MoveSource source)
     {
         if (_isAnimating)
             return false;
 
-        StartLayerRotation(axis, layer, dir);
+        StartLayerRotation(axis, layer, dir, source);
         return true;
     }
 
-    private void StartLayerRotation(CubeAxis axis, int layer, RotationDirection dir)
-    {
-        _isAnimating = true;
-
-        // Сообщаем View — запускай анимацию
-        OnLayerRotationStarted?.Invoke(axis, layer, dir);
-
-        // Меняем модель (данные меняются сразу)
-        switch (axis)
-        {
-            case CubeAxis.X:
-                _model.RotateLayerX(layer, dir);
-                break;
-            case CubeAxis.Y:
-                _model.RotateLayerY(layer, dir);
-                break;
-            case CubeAxis.Z:
-                _model.RotateLayerZ(layer, dir);
-                break;
-        }
-    }
-
-    // Вызывается View после окончания анимации
     public void CompleteRotation()
     {
-        Debug.Log("I complete rotation");
         _isAnimating = false;
+
         OnCubeDataChanged?.Invoke(_model.Faces);
-        OnRotationCompleted?.Invoke();
-
-        if (_model.IsSolved())
-            OnCubeSolved?.Invoke();
-        if (_isShuffling)
+        OnLogicalMoveCompleted?.Invoke(_currentMoveSource);
+        if (_currentMoveSource == MoveSource.User)
+        {
+            OnInputUnblockRequested?.Invoke();
+        }
+        else if (_currentMoveSource == MoveSource.Shuffle)
             PlayNextShuffleMove();
-
     }
 
-    // ================= UTIL =================
-
-    public void ShuffleCube(int moves = 25)
+    public bool IsCubeSolved()
     {
-        if (_isAnimating)
-            return;
-
-        ShuffleAnimated(moves);
+        OnCubeSolved?.Invoke();
+        return _model.IsSolved();
     }
+
+    public void ShuffleCube(int moves)
+    {
+        if (_isAnimating) return;
+
+
+        OnInputBlockRequested?.Invoke();
+
+        EnqueueShuffleMoves(moves);
+        PlayNextShuffleMove();
+    }
+
 
     public void ResetCube()
     {
@@ -107,22 +98,27 @@ public class RubikCubeViewModel
         OnCubeDataChanged?.Invoke(_model.Faces);
     }
 
-    public bool IsCubeSolved()
+    private void MoveComplete(MoveSource source)
     {
-        return _model.IsSolved();
-    }
-    
-    public void ShuffleAnimated(int moves = 25)
-    {
-        if (_isAnimating || _isShuffling)
+        if (source != MoveSource.User)
             return;
+        var pattern = _matcher.TryMatch(_model.Faces);
+        if (pattern != null)
+        {
+            _patternApplier.Apply(pattern);
+            ShuffleCube(10);
+        }
+    }
+
+    private void EnqueueShuffleMoves(int moves)
+    {
         _shuffleQueue = new Queue<(CubeAxis, int, RotationDirection)>();
 
         var rnd = new System.Random();
 
         for (int i = 0; i < moves; i++)
         {
-            var axis = (CubeAxis)rnd.Next(2);
+            var axis = (CubeAxis) rnd.Next(3);
             int layer = rnd.Next(3);
             var dir = rnd.Next(2) == 0
                 ? RotationDirection.Clockwise
@@ -130,34 +126,60 @@ public class RubikCubeViewModel
 
             _shuffleQueue.Enqueue((axis, layer, dir));
         }
-        _isShuffling = true;
-        PlayNextShuffleMove();
-
     }
-    
+
+
+    private bool NeedFinishShuffle()
+    {
+        if (_matcher.TryMatch(_model.Faces))
+        {
+            EnqueueShuffleMoves(2);
+            return false;
+        }
+
+
+        OnInputUnblockRequested?.Invoke();
+        return true;
+    }
+
+
+    private void StartLayerRotation(
+        CubeAxis axis,
+        int layer,
+        RotationDirection dir,
+        MoveSource source)
+    {
+        _currentMoveSource = source;
+        _isAnimating = true;
+
+        OnLayerRotationStarted?.Invoke(axis, layer, dir);
+
+        _model.Rotate(axis, layer, dir);
+    }
+
     private void PlayNextShuffleMove()
     {
         if (_shuffleQueue.Count == 0)
         {
-            _isShuffling = false;
-            
-            OnShuffleCompleted?.Invoke();
-            return;
+            if (NeedFinishShuffle())
+                return;
         }
 
         var move = _shuffleQueue.Dequeue();
-
-        // это вызовет анимацию во View
-        TryRotateLayer(move.axis, move.layer, move.dir);
-       
-
+        TryRotateLayer(move.axis, move.layer, move.dir, MoveSource.Shuffle);
     }
-
-
 }
+
 public enum CubeAxis
 {
     X, // Left <-> Right
     Y, // Top <-> Bottom
-    Z  // Back <-> Front
+    Z // Back <-> Front
+}
+
+public enum MoveSource
+{
+    User,
+    Shuffle,
+    System
 }

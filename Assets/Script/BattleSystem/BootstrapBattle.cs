@@ -1,26 +1,34 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BootstrapBattle : MonoBehaviour
+namespace BattleSystem
 {
-    
-    [SerializeField] private List<Pattern> patterns;
-     private RubikCubeViewModel _cube;
-     [SerializeField]
-     private RubikCubeView _cubeView;
-
-    private Matcher _matcher;
-
-    public void Start()
+    public class BootstrapBattle : MonoBehaviour
     {
 
-        _cube = _cubeView.ViewModel;
-        var context = new PatternContext
-        {
-        };
+        [SerializeField]
+        private List<Pattern> patterns;
 
-        _matcher = new Matcher(patterns, context);
-        _cube.OnCubeDataChanged += _matcher.OnCubeChanged;
-        
+        [SerializeField]
+        private RubikCubeView _cubeView;
+
+
+        public void Start()
+        {
+            var context = new PatternContext
+            {
+            };
+
+
+            var model = new RubikCubeModel();
+            var matcher = new Matcher(patterns);
+            var applier = new PatternApplier(context);
+
+            var vm = new RubikCubeViewModel(model);
+            vm.Bind(matcher, applier);
+
+            _cubeView.Initialize(vm);
+
+        }
     }
 }

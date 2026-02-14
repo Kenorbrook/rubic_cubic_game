@@ -33,8 +33,25 @@ public class RubikCubeModel
 
     // ========================= PUBLIC API =========================
 
-    // X: 0 = Left, 1 = Middle, 2 = Right
-    public void RotateLayerX(int layer, RotationDirection dir)
+    public void Rotate(CubeAxis axis,
+        int layer,
+        RotationDirection dir)
+    {
+        switch (axis)
+        {
+            case CubeAxis.X:
+                RotateLayerX(layer, dir);
+                break;
+            case CubeAxis.Y:
+                RotateLayerY(layer, dir);
+                break;
+            case CubeAxis.Z:
+                RotateLayerZ(layer, dir);
+                break;
+        }
+    }
+
+    private void RotateLayerX(int layer, RotationDirection dir)
     {
         CubeColor[] front  = _faces[CubeSide.Front].GetColumn(layer);
         CubeColor[] top    = _faces[CubeSide.Top].GetColumn(layer);
@@ -71,8 +88,8 @@ public class RubikCubeModel
         OnCubeChanged?.Invoke();
     }
 
-    // Y: 0 = Top, 1 = Middle, 2 = Bottom
-    public void RotateLayerY(int layer, RotationDirection dir)
+    
+    private void RotateLayerY(int layer, RotationDirection dir)
     {
         CubeColor[] front = _faces[CubeSide.Front].GetRow(layer);
         CubeColor[] right = _faces[CubeSide.Right].GetRow(layer);
@@ -107,8 +124,8 @@ public class RubikCubeModel
         OnCubeChanged?.Invoke();
     }
 
-    // Z: 0 = Back, 1 = Middle, 2 = Front
-    public void RotateLayerZ(int layer, RotationDirection dir)
+    
+    private void RotateLayerZ(int layer, RotationDirection dir)
     {
         var top    = _faces[CubeSide.Top].GetRow(2 - layer);
         var right  = _faces[CubeSide.Right].GetColumn(layer);

@@ -1,6 +1,11 @@
+using BattleSystem;
 using UnityEngine;
-[System.Serializable]
-public abstract class Effect
-{ 
-    public abstract void Apply(PatternContext context);
+
+namespace Effects
+{
+    [System.Serializable]
+    public abstract class Effect
+    {
+        public abstract void Apply(PatternContext context);
+    }
 }

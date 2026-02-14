@@ -378,7 +378,6 @@ GameObject:
   - component: {fileID: 282333556}
   - component: {fileID: 282333560}
   - component: {fileID: 282333559}
-  - component: {fileID: 282333558}
   - component: {fileID: 282333557}
   m_Layer: 5
   m_Name: ParentCube
@@ -427,20 +426,6 @@ MonoBehaviour:
   _cubeView: {fileID: 282333560}
   _frontFaceRect: {fileID: 674458764}
   _cellSize: 300
---- !u!114 &282333558
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 282333555}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 287eeb6b4420bd1459d9544206ccd026, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CubeInputController
-  _swipeDetector: {fileID: 282333559}
-  _cubeView: {fileID: 282333560}
 --- !u!114 &282333559
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -476,7 +461,6 @@ MonoBehaviour:
   _topFaceView: {fileID: 2031521831}
   _bottomFaceView: {fileID: 599068867}
   _inputControllers:
-  - {fileID: 282333558}
   - {fileID: 282333557}
   _shuffleButton: {fileID: 1035871412}
   _resetButton: {fileID: 1714711322}
@@ -2621,7 +2605,7 @@ Camera:
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
-  m_AllowMSAA: 1
+  m_AllowMSAA: 0
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1

@@ -93,8 +93,6 @@ public class SwipeDetector : MonoBehaviour
         float swipeTime = Time.time - _startTime;
         float swipeDistance = Vector2.Distance(_startTouchPosition, _endTouchPosition);
 
-        // Проверяем, что свайп достаточно быстрый и длинный
-        Debug.Log($"Swipe ended. Time: {swipeTime}s, Distance: {swipeDistance}px");
 
         if (swipeTime <= _maxSwipeTime && swipeDistance >= _minSwipeDistance)
         {

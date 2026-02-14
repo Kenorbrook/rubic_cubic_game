@@ -7,17 +7,15 @@ using UnityEngine;
 /// </summary>
 public class FaceRotationAnimator : MonoBehaviour
 {
+    public bool IsAnimating => _isAnimating;
+    
     [SerializeField] private float _rotationDuration = 0.3f;
     [SerializeField] private AnimationCurve _rotationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     private bool _isAnimating;
     private Coroutine _currentAnimation;
 
-    public bool IsAnimating => _isAnimating;
 
-    /// <summary>
-    /// Анимировать вращение грани
-    /// </summary>
     public void AnimateRotation(Transform faceTransform, RotationDirection direction, Action onComplete)
     {
         if (_isAnimating)
@@ -34,9 +32,16 @@ public class FaceRotationAnimator : MonoBehaviour
         _currentAnimation = StartCoroutine(RotateCoroutine(faceTransform, direction, onComplete));
     }
 
-    /// <summary>
-    /// Корутина для плавного вращения
-    /// </summary>
+    public void StopAnimation()
+    {
+        if (_currentAnimation != null)
+        {
+            StopCoroutine(_currentAnimation);
+            _currentAnimation = null;
+        }
+        _isAnimating = false;
+    }
+    
     private IEnumerator RotateCoroutine(Transform faceTransform, RotationDirection direction, Action onComplete)
     {
         _isAnimating = true;
@@ -58,26 +63,12 @@ public class FaceRotationAnimator : MonoBehaviour
             yield return null;
         }
 
-        // Убедимся, что достигли конечного положения
         faceTransform.localRotation = endRotation;
 
         _isAnimating = false;
         _currentAnimation = null;
 
-        // Вызываем callback
         onComplete?.Invoke();
     }
 
-    /// <summary>
-    /// Остановить текущую анимацию
-    /// </summary>
-    public void StopAnimation()
-    {
-        if (_currentAnimation != null)
-        {
-            StopCoroutine(_currentAnimation);
-            _currentAnimation = null;
-        }
-        _isAnimating = false;
-    }
 }

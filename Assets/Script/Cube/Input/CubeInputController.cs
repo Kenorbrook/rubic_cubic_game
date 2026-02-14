@@ -1,18 +1,12 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// Контроллер ввода для кубика Рубика
-/// Обрабатывает свайпы и определяет, какую грань нужно повернуть
-/// Блокирует одновременное вращение нескольких граней
-/// </summary>
 public class CubeInputController : InputController
 {
     [SerializeField] private SwipeDetector _swipeDetector;
     [SerializeField] private RubikCubeView _cubeView;
 
     private bool _isInputBlocked;
-
     private void OnEnable()
     {
         if (_swipeDetector != null)
@@ -28,65 +22,56 @@ public class CubeInputController : InputController
             _swipeDetector.OnSwipe -= HandleSwipe;
         }
     }
+    public override void BlockInput()
+    {
+    }
 
-    /// <summary>
-    /// Обработка свайпа
-    /// </summary>
+    public override void UnblockInput()
+    {
+    }
+    
     private void HandleSwipe(SwipeDirection direction, Vector2 startPosition)
     {
-        /*Debug.Log($" TRY Swipe detected: {direction} at position {startPosition}");
-        // Блокируем ввод, если уже идет анимация
         if (_isInputBlocked)
         {
             Debug.Log("Input blocked: animation in progress");
             return;
         }
 
-        // Проверяем, что свайп не начался на UI элементе
-      
-
-        // Определяем, на какой грани был свайп
         CubeSide? targetSide = GetSwipedFace(startPosition);
         if (!targetSide.HasValue)
         {
             return;
         }
 
-        // Определяем направление вращения на основе свайпа
         RotationDirection? rotationDirection = GetRotationDirection(targetSide.Value, direction);
         if (!rotationDirection.HasValue)
         {
             return;
         }
 
-        // Отправляем команду на вращение
         if (_cubeView != null)
         {
             bool success;
             if(direction== SwipeDirection.Down || direction== SwipeDirection.Up)
-                success = _cubeView.RequestColumnRotation(targetSide.Value, rotationDirection.Value);
+                success = _cubeView.RequestColumnRotation((int)targetSide.Value, rotationDirection.Value, MoveSource.User);
             else 
-                success = _cubeView.RequestRowRotation(targetSide.Value, rotationDirection.Value);
+                success = _cubeView.RequestRowRotation((int)targetSide.Value, rotationDirection.Value, MoveSource.User);
             
             if (success)
             {
                 BlockInput();
             }
-        }*/
+        }
     }
 
-    /// <summary>
-    /// Определить, на какой грани был свайп
-    /// </summary>
     private CubeSide? GetSwipedFace(Vector2 screenPosition)
     {
-        // Используем Raycast для определения, на какой грани был тап
         Ray ray = Camera.main.ScreenPointToRay(screenPosition);
         RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
 
         if (hit.collider != null)
         {
-            // Проверяем, есть ли у объекта компонент CubeFaceView
             CubeFaceView faceView = hit.collider.GetComponent<CubeFaceView>();
             if (faceView != null)
             {
@@ -97,12 +82,8 @@ public class CubeInputController : InputController
         return null;
     }
 
-    /// <summary>
-    /// Определить направление вращения на основе свайпа
-    /// </summary>
     private RotationDirection? GetRotationDirection(CubeSide side, SwipeDirection swipe)
     {
-        // Логика зависит от того, на какой грани был свайп
         switch (side)
         {
             case CubeSide.Front:
@@ -134,9 +115,6 @@ public class CubeInputController : InputController
         return null;
     }
 
-    /// <summary>
-    /// Проверить, находится ли указатель над UI элементом
-    /// </summary>
     private bool IsPointerOverUI(Vector2 screenPosition)
     {
         PointerEventData eventData = new PointerEventData(EventSystem.current)
@@ -149,20 +127,5 @@ public class CubeInputController : InputController
 
         return results.Count > 0;
     }
-
-    /// <summary>
-    /// Заблокировать ввод (вызывается при начале анимации)
-    /// </summary>
-    public override void BlockInput()
-    {
-        _isInputBlocked = true;
-    }
-
-    /// <summary>
-    /// Разблокировать ввод (вызывается после окончания анимации)
-    /// </summary>
-    public override void UnblockInput()
-    {
-        _isInputBlocked = false;
-    }
+    
 }

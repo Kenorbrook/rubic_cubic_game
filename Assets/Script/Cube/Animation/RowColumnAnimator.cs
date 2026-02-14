@@ -7,6 +7,8 @@ using UnityEngine;
 /// </summary>
 public class RowColumnAnimator : MonoBehaviour
 {
+    public float SpeedMultiplier { get; set; } = 1f;
+    
     [SerializeField]
     private float _rotationDuration = 0.3f;
 
@@ -14,16 +16,10 @@ public class RowColumnAnimator : MonoBehaviour
     private AnimationCurve _rotationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     private Coroutine _currentAnimation;
-    public float SpeedMultiplier { get; set; } = 1f;
 
 
-    /// <summary>
-    /// Анимировать вращение строки (горизонтальное движение)
-    /// </summary>
     public void AnimateRowRotation(Transform[] cells, RotationDirection direction, Action onComplete)
     {
-        
-
         if (_currentAnimation != null)
         {
             StopCoroutine(_currentAnimation);
@@ -32,13 +28,8 @@ public class RowColumnAnimator : MonoBehaviour
         _currentAnimation = StartCoroutine(RowRotationCoroutine(cells, direction, onComplete));
     }
 
-    /// <summary>
-    /// Анимировать вращение грани
-    /// </summary>
     public void AnimateAllRotation(Transform[] cells, RotationDirection direction, Action onComplete)
     {
-      
-
         if (_currentAnimation != null)
         {
             StopCoroutine(_currentAnimation);
@@ -47,13 +38,8 @@ public class RowColumnAnimator : MonoBehaviour
         _currentAnimation = StartCoroutine(AllRotationCoroutine(cells, direction, onComplete));
     }
 
-    /// <summary>
-    /// Анимировать вращение столбца (вертикальное движение)
-    /// </summary>
     public void AnimateColumnRotation(Transform[] cells, RotationDirection direction, Action onComplete)
     {
-        
-
         if (_currentAnimation != null)
         {
             StopCoroutine(_currentAnimation);
@@ -62,14 +48,20 @@ public class RowColumnAnimator : MonoBehaviour
         _currentAnimation = StartCoroutine(ColumnRotationCoroutine(cells, direction, onComplete));
     }
 
-    /// <summary>
-    /// Корутина для анимации строки (горизонтальное смещение)
-    /// </summary>
+    public void StopAnimation()
+    {
+        if (_currentAnimation != null)
+        {
+            StopCoroutine(_currentAnimation);
+            _currentAnimation = null;
+        }
+
+    }
+    
     private IEnumerator RowRotationCoroutine(Transform[] cells, RotationDirection direction, Action onComplete)
     {
 
-        // Определяем направление смещения
-        float moveDistance = 100f; // Расстояние смещения в пикселях
+        float moveDistance = 100f;
         float targetOffset = direction == RotationDirection.Clockwise ? moveDistance : -moveDistance;
 
         Vector3[] startPositions = new Vector3[cells.Length];
@@ -96,7 +88,6 @@ public class RowColumnAnimator : MonoBehaviour
             yield return null;
         }
 
-        // Возвращаем ячейки в исходные позиции
         for (int i = 0; i < cells.Length; i++)
         {
             cells[i].localPosition = startPositions[i];
@@ -106,9 +97,6 @@ public class RowColumnAnimator : MonoBehaviour
         onComplete?.Invoke();
     }
 
-    /// <summary>
-    /// Корутина для анимации строки (горизонтальное смещение)
-    /// </summary>
     private IEnumerator AllRotationCoroutine(Transform[] cells, RotationDirection direction, Action onComplete)
     {
 
@@ -118,7 +106,6 @@ public class RowColumnAnimator : MonoBehaviour
             yield break;
         }
 
-        // === создаём pivot в центре грани ===
         Transform first = cells[0];
         Transform parent = first.parent;
 
@@ -126,7 +113,6 @@ public class RowColumnAnimator : MonoBehaviour
         Transform pivot = pivotObj.transform;
         pivot.SetParent(parent, false);
 
-        // центр считаем как среднее всех позиций
         Vector3 center = Vector3.zero;
         int count = 0;
 
@@ -139,7 +125,6 @@ public class RowColumnAnimator : MonoBehaviour
         center /= Mathf.Max(1, count);
         pivot.localPosition = center;
 
-        // === сохраняем начальные данные ===
         Vector3[] startPositions = new Vector3[cells.Length];
         Quaternion[] startRotations = new Quaternion[cells.Length];
 
@@ -164,7 +149,6 @@ public class RowColumnAnimator : MonoBehaviour
             yield return null;
         }
 
-        // === возвращаем всё обратно ===
         for (int i = 0; i < cells.Length; i++)
         {
             cells[i].SetParent(parent, true);
@@ -177,14 +161,10 @@ public class RowColumnAnimator : MonoBehaviour
         onComplete?.Invoke();
     }
 
-    /// <summary>
-    /// Корутина для анимации столбца (вертикальное смещение)
-    /// </summary>
     private IEnumerator ColumnRotationCoroutine(Transform[] cells, RotationDirection direction, Action onComplete)
     {
 
-        // Определяем направление смещения
-        float moveDistance = 100f; // Расстояние смещения в пикселях
+        float moveDistance = 100f; 
         float targetOffset = direction == RotationDirection.Clockwise ? -moveDistance : moveDistance;
 
         Vector3[] startPositions = new Vector3[cells.Length];
@@ -211,7 +191,6 @@ public class RowColumnAnimator : MonoBehaviour
             yield return null;
         }
 
-        // Возвращаем ячейки в исходные позиции
         for (int i = 0; i < cells.Length; i++)
         {
             cells[i].localPosition = startPositions[i];
@@ -222,16 +201,4 @@ public class RowColumnAnimator : MonoBehaviour
         onComplete?.Invoke();
     }
 
-    /// <summary>
-    /// Остановить текущую анимацию
-    /// </summary>
-    public void StopAnimation()
-    {
-        if (_currentAnimation != null)
-        {
-            StopCoroutine(_currentAnimation);
-            _currentAnimation = null;
-        }
-
-    }
 }
