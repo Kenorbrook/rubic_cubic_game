@@ -82,7 +82,6 @@ public class RubikCubeView : MonoBehaviour
     {
         _viewModel.OnInputBlockRequested += BlockInput;
         _viewModel.OnInputUnblockRequested += UnblockInput;
-        _viewModel.OnInputUnblockRequested += HandleShuffleCompleted;
         _viewModel.OnLayerRotationStarted += HandleLayerRotationStarted;
 
         _viewModel.OnCubeDataChanged += HandleFaceUpdated;
@@ -110,7 +109,6 @@ public class RubikCubeView : MonoBehaviour
             _viewModel.Dispose();
             _viewModel.OnInputBlockRequested -= BlockInput;
             _viewModel.OnInputUnblockRequested -= UnblockInput;
-            _viewModel.OnInputUnblockRequested -= HandleShuffleCompleted;
             _viewModel.OnLayerRotationStarted -= HandleLayerRotationStarted;
             _viewModel.OnCubeDataChanged -= HandleFaceUpdated;
             _viewModel.OnCubeSolved -= HandleCubeSolved;
@@ -129,13 +127,11 @@ public class RubikCubeView : MonoBehaviour
         return _viewModel.TryRotateLayer(CubeAxis.X, colIndex, direction, source);
     }
     
-    private void HandleShuffleCompleted()
+    private void HandleLayerRotationStarted(CubeAxis axis, int index, RotationDirection dir, MoveSource source)
     {
-        SetAnimationSpeed(_normalSpeed); 
-    }
-    
-    private void HandleLayerRotationStarted(CubeAxis axis, int index, RotationDirection dir)
-    {
+        // View decides animation speed based on move metadata from VM.
+        SetAnimationSpeed(source == MoveSource.Shuffle ? _shuffleSpeed : _normalSpeed);
+
         _pendingAnimations = 0;
         if (axis == CubeAxis.Y)
             AnimateLayerY(index, dir);
@@ -262,7 +258,6 @@ public class RubikCubeView : MonoBehaviour
 
     private void OnShuffleClicked()
     {
-        SetAnimationSpeed(_shuffleSpeed); 
         _viewModel.ShuffleCube(20);
     }
 

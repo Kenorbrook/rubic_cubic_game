@@ -1,6 +1,4 @@
 using BattleSystem;
-using UnityEngine;
-
 
 namespace Effects
 {
@@ -11,7 +9,7 @@ namespace Effects
 
         public override void Apply(PatternContext context)
         {
-            //context.player.AddShield(amount);
+            context.CombatService?.AddPlayerShield(amount);
         }
     }
 }

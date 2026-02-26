@@ -11,8 +11,9 @@ public class RubikCubeViewModel
     public event Action OnCubeSolved;
     public event Action OnInputBlockRequested;
     public event Action OnInputUnblockRequested;
-    public event Action<CubeAxis, int, RotationDirection> OnLayerRotationStarted;
+    public event Action<CubeAxis, int, RotationDirection, MoveSource> OnLayerRotationStarted;
     public event Action<Dictionary<CubeSide, CubeFaceModel>> OnCubeDataChanged;
+    public event Action<bool> OnShuffleStateChanged;
 
 
     private RubikCubeModel _model;
@@ -24,6 +25,7 @@ public class RubikCubeViewModel
     private MoveSource _currentMoveSource;
     private ICubeMatcher _matcher;
     private IPatternApplier _patternApplier;
+    private bool _isShuffleInProgress;
 
     public RubikCubeViewModel(RubikCubeModel model)
     {
@@ -81,6 +83,11 @@ public class RubikCubeViewModel
     {
         if (_isAnimating) return;
 
+        if (!_isShuffleInProgress)
+        {
+            _isShuffleInProgress = true;
+            OnShuffleStateChanged?.Invoke(true);
+        }
 
         OnInputBlockRequested?.Invoke();
 
@@ -118,7 +125,7 @@ public class RubikCubeViewModel
 
         for (int i = 0; i < moves; i++)
         {
-            var axis = (CubeAxis) rnd.Next(3);
+            var axis = (CubeAxis) rnd.Next(2);
             int layer = rnd.Next(3);
             var dir = rnd.Next(2) == 0
                 ? RotationDirection.Clockwise
@@ -137,6 +144,11 @@ public class RubikCubeViewModel
             return false;
         }
 
+        if (_isShuffleInProgress)
+        {
+            _isShuffleInProgress = false;
+            OnShuffleStateChanged?.Invoke(false);
+        }
 
         OnInputUnblockRequested?.Invoke();
         return true;
@@ -152,7 +164,7 @@ public class RubikCubeViewModel
         _currentMoveSource = source;
         _isAnimating = true;
 
-        OnLayerRotationStarted?.Invoke(axis, layer, dir);
+        OnLayerRotationStarted?.Invoke(axis, layer, dir, source);
 
         _model.Rotate(axis, layer, dir);
     }

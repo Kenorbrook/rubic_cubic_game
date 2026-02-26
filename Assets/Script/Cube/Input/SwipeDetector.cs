@@ -1,10 +1,8 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// Определяет направление свайпа на мобильных устройствах
-/// </summary>
+
 public enum SwipeDirection
 {
     None,
@@ -14,9 +12,7 @@ public enum SwipeDirection
     Right
 }
 
-/// <summary>
-/// Детектор свайпов для мобильных устройств (New Input System)
-/// </summary>
+
 public class SwipeDetector : MonoBehaviour
 {
     [SerializeField] private float _minSwipeDistance = 50f;
@@ -31,32 +27,28 @@ public class SwipeDetector : MonoBehaviour
 
     private void Update()
     {
+        if (MenuPanel.IsOpen)
+            return;
+
         DetectSwipe();
     }
 
-    /// <summary>
-    /// Определение свайпа (New Input System)
-    /// </summary>
     private void DetectSwipe()
     {
-        // Проверяем тач-ввод (мобильные устройства)
-        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        if (Touchscreen.current != null)
         {
             var touch = Touchscreen.current.primaryTouch;
 
-            // Начало касания
             if (touch.press.wasPressedThisFrame)
             {
                 StartSwipe(touch.position.ReadValue());
             }
-            // Конец касания
             else if (touch.press.wasReleasedThisFrame && _isSwiping)
             {
                 EndSwipe(touch.position.ReadValue());
             }
         }
-        // Проверяем мышь (для тестирования в редакторе)
-        else if (Mouse.current != null)
+        if (Mouse.current != null)
         {
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
@@ -69,9 +61,6 @@ public class SwipeDetector : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Начало свайпа
-    /// </summary>
     private void StartSwipe(Vector2 position)
     {
         _startTouchPosition = position;
@@ -79,9 +68,6 @@ public class SwipeDetector : MonoBehaviour
         _isSwiping = true;
     }
 
-    /// <summary>
-    /// Конец свайпа
-    /// </summary>
     private void EndSwipe(Vector2 position)
     {
         if (!_isSwiping)
@@ -109,31 +95,21 @@ public class SwipeDetector : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Определить направление свайпа
-    /// </summary>
     private SwipeDirection GetSwipeDirection()
     {
         Vector2 swipeVector = _endTouchPosition - _startTouchPosition;
 
-        // Определяем, какая ось доминирует
         if (Mathf.Abs(swipeVector.x) > Mathf.Abs(swipeVector.y))
         {
-            // Горизонтальный свайп
             return swipeVector.x > 0 ? SwipeDirection.Right : SwipeDirection.Left;
         }
-        else
-        {
-            // Вертикальный свайп
-            return swipeVector.y > 0 ? SwipeDirection.Up : SwipeDirection.Down;
-        }
+
+        return swipeVector.y > 0 ? SwipeDirection.Up : SwipeDirection.Down;
     }
 
-    /// <summary>
-    /// Получить позицию начала свайпа
-    /// </summary>
     public Vector2 GetSwipeStartPosition()
     {
         return _startTouchPosition;
     }
 }
+

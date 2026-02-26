@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public class CubeInputController : InputController
 {
@@ -24,10 +23,12 @@ public class CubeInputController : InputController
     }
     public override void BlockInput()
     {
+        _isInputBlocked = true;
     }
 
     public override void UnblockInput()
     {
+        _isInputBlocked = false;
     }
     
     private void HandleSwipe(SwipeDirection direction, Vector2 startPosition)
@@ -37,6 +38,9 @@ public class CubeInputController : InputController
             Debug.Log("Input blocked: animation in progress");
             return;
         }
+        
+        if (MenuPanel.IsOpen)
+            return;
 
         CubeSide? targetSide = GetSwipedFace(startPosition);
         if (!targetSide.HasValue)
@@ -115,17 +119,4 @@ public class CubeInputController : InputController
         return null;
     }
 
-    private bool IsPointerOverUI(Vector2 screenPosition)
-    {
-        PointerEventData eventData = new PointerEventData(EventSystem.current)
-        {
-            position = screenPosition
-        };
-
-        var results = new System.Collections.Generic.List<RaycastResult>();
-        EventSystem.current.RaycastAll(eventData, results);
-
-        return results.Count > 0;
-    }
-    
 }

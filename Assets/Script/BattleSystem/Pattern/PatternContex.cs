@@ -2,10 +2,9 @@ namespace BattleSystem
 {
     public class PatternContext
     {
-        public int damage;
-        public int shield;
-        public float chance;
-
-        public Character enemy;
+        public ICombatService CombatService;
+        public System.Action<Pattern> PatternApplied;
+        public System.Action PlayerSwiped;
+        public System.Action<bool> ShuffleStateChanged;
     }
 }

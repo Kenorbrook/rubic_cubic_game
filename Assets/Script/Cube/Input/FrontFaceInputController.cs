@@ -10,9 +10,9 @@ public class FrontFaceInputController : InputController
     [SerializeField] private SwipeDetector _swipeDetector;
     [SerializeField] private RubikCubeView _cubeView;
     [SerializeField] private RectTransform _frontFaceRect; // RectTransform передней грани
-    [SerializeField] private float _cellSize = 100f; // Размер одной ячейки в пикселях
 
     private bool _isInputBlocked;
+    public event System.Action<SwipeDirection> FrontFaceSwipePerformed;
 
     private void OnEnable()
     {
@@ -41,6 +41,9 @@ public class FrontFaceInputController : InputController
             Debug.Log("Input blocked: animation in progress");
             return;
         }
+        
+        if (MenuPanel.IsOpen)
+            return;
 
         // Проверяем, что свайп был на передней грани
         if (!IsPointerOverFrontFace(startPosition))
@@ -90,6 +93,7 @@ public class FrontFaceInputController : InputController
 
         if (success)
         {
+            FrontFaceSwipePerformed?.Invoke(direction);
             BlockInput();
         }
     }

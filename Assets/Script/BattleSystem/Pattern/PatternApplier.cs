@@ -12,6 +12,7 @@
 
         public void Apply(Pattern pattern)
         {
+            _context.PatternApplied?.Invoke(pattern);
             foreach (var effect in pattern.effects)
                 effect.Apply(_context);
         }

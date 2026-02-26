@@ -62,16 +62,16 @@ public class RubikCubeModel
         {
             
             _faces[CubeSide.Top].SetColumn(layer, front);
-            _faces[CubeSide.Back].SetColumn(2 - layer, top);
-            _faces[CubeSide.Bottom].SetColumn(layer, back);
+            _faces[CubeSide.Back].SetColumn(2 - layer, Reverse(top));
+            _faces[CubeSide.Bottom].SetColumn(layer,Reverse(back));
             _faces[CubeSide.Front].SetColumn(layer, bottom);
             
         }
         else
         {
             _faces[CubeSide.Bottom].SetColumn(layer, front);
-            _faces[CubeSide.Back].SetColumn(2 - layer, bottom);
-            _faces[CubeSide.Top].SetColumn(layer, back);
+            _faces[CubeSide.Back].SetColumn(2 - layer,Reverse(bottom));
+            _faces[CubeSide.Top].SetColumn(layer,Reverse(back));
             _faces[CubeSide.Front].SetColumn(layer, top);
         }
 

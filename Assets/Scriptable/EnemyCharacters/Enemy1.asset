@@ -9,7 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad1a3888a33e466bad9d7280d9cb92cc, type: 3}
+  m_Script: {fileID: 11500000, guid: 0e8fd60af08f42879c77d6db4cf232e0, type: 3}
   m_Name: Enemy1
-  m_EditorClassIdentifier: Assembly-CSharp::Character
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyCharacter
   Sprite: {fileID: 21300000, guid: 7ea1f9f89a9e5084aa99fe9c647d4cff, type: 3}
+  BaseHp: 100
+  BaseAttack: 60
+  AttackFrequencyTurns: 10
