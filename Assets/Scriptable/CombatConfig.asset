@@ -1,0 +1,325 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccd5e1374dccf76499bdee09d1ad9a81, type: 3}
+  m_Name: CombatConfig
+  m_EditorClassIdentifier: Assembly-CSharp::CombatConfig
+  _enemyLevelMultipliers:
+  - Level: 1
+    HpMultiplier: 1
+    AttackMultiplier: 1
+  - Level: 2
+    HpMultiplier: 1.12
+    AttackMultiplier: 1.1
+  - Level: 3
+    HpMultiplier: 1.24
+    AttackMultiplier: 1.2
+  - Level: 4
+    HpMultiplier: 1.36
+    AttackMultiplier: 1.3
+  - Level: 5
+    HpMultiplier: 1.48
+    AttackMultiplier: 1.4
+  - Level: 6
+    HpMultiplier: 1.6
+    AttackMultiplier: 1.5
+  - Level: 7
+    HpMultiplier: 1.72
+    AttackMultiplier: 1.6
+  - Level: 8
+    HpMultiplier: 1.84
+    AttackMultiplier: 1.7
+  - Level: 9
+    HpMultiplier: 1.96
+    AttackMultiplier: 1.8
+  - Level: 10
+    HpMultiplier: 2.08
+    AttackMultiplier: 1.9
+  - Level: 11
+    HpMultiplier: 2.2
+    AttackMultiplier: 2
+  - Level: 12
+    HpMultiplier: 2.32
+    AttackMultiplier: 2.1
+  - Level: 13
+    HpMultiplier: 2.44
+    AttackMultiplier: 2.2
+  - Level: 14
+    HpMultiplier: 2.56
+    AttackMultiplier: 2.3
+  - Level: 15
+    HpMultiplier: 2.68
+    AttackMultiplier: 2.4
+  - Level: 16
+    HpMultiplier: 2.8
+    AttackMultiplier: 2.5
+  - Level: 17
+    HpMultiplier: 2.92
+    AttackMultiplier: 2.6
+  - Level: 18
+    HpMultiplier: 3.04
+    AttackMultiplier: 2.7
+  - Level: 19
+    HpMultiplier: 3.16
+    AttackMultiplier: 2.8
+  - Level: 20
+    HpMultiplier: 3.28
+    AttackMultiplier: 2.9
+  - Level: 21
+    HpMultiplier: 3.4
+    AttackMultiplier: 3
+  - Level: 22
+    HpMultiplier: 3.52
+    AttackMultiplier: 3.1
+  - Level: 23
+    HpMultiplier: 3.64
+    AttackMultiplier: 3.2
+  - Level: 24
+    HpMultiplier: 3.76
+    AttackMultiplier: 3.3
+  - Level: 25
+    HpMultiplier: 3.88
+    AttackMultiplier: 3.4
+  - Level: 26
+    HpMultiplier: 4
+    AttackMultiplier: 3.5
+  - Level: 27
+    HpMultiplier: 4.12
+    AttackMultiplier: 3.6
+  - Level: 28
+    HpMultiplier: 4.24
+    AttackMultiplier: 3.7
+  - Level: 29
+    HpMultiplier: 4.36
+    AttackMultiplier: 3.8
+  - Level: 30
+    HpMultiplier: 4.48
+    AttackMultiplier: 3.9
+  - Level: 31
+    HpMultiplier: 4.6
+    AttackMultiplier: 4
+  - Level: 32
+    HpMultiplier: 4.72
+    AttackMultiplier: 4.1
+  - Level: 33
+    HpMultiplier: 4.84
+    AttackMultiplier: 4.2
+  - Level: 34
+    HpMultiplier: 4.96
+    AttackMultiplier: 4.3
+  - Level: 35
+    HpMultiplier: 5.08
+    AttackMultiplier: 4.4
+  - Level: 36
+    HpMultiplier: 5.2
+    AttackMultiplier: 4.5
+  - Level: 37
+    HpMultiplier: 5.32
+    AttackMultiplier: 4.6
+  - Level: 38
+    HpMultiplier: 5.44
+    AttackMultiplier: 4.7
+  - Level: 39
+    HpMultiplier: 5.56
+    AttackMultiplier: 4.8
+  - Level: 40
+    HpMultiplier: 5.68
+    AttackMultiplier: 4.9
+  - Level: 41
+    HpMultiplier: 5.8
+    AttackMultiplier: 5
+  - Level: 42
+    HpMultiplier: 5.92
+    AttackMultiplier: 5.1
+  - Level: 43
+    HpMultiplier: 6.04
+    AttackMultiplier: 5.2
+  - Level: 44
+    HpMultiplier: 6.16
+    AttackMultiplier: 5.3
+  - Level: 45
+    HpMultiplier: 6.28
+    AttackMultiplier: 5.4
+  - Level: 46
+    HpMultiplier: 6.4
+    AttackMultiplier: 5.5
+  - Level: 47
+    HpMultiplier: 6.52
+    AttackMultiplier: 5.6
+  - Level: 48
+    HpMultiplier: 6.64
+    AttackMultiplier: 5.7
+  - Level: 49
+    HpMultiplier: 6.76
+    AttackMultiplier: 5.8
+  - Level: 50
+    HpMultiplier: 6.88
+    AttackMultiplier: 5.9
+  - Level: 51
+    HpMultiplier: 7
+    AttackMultiplier: 6
+  - Level: 52
+    HpMultiplier: 7.12
+    AttackMultiplier: 6.1
+  - Level: 53
+    HpMultiplier: 7.24
+    AttackMultiplier: 6.2
+  - Level: 54
+    HpMultiplier: 7.36
+    AttackMultiplier: 6.3
+  - Level: 55
+    HpMultiplier: 7.48
+    AttackMultiplier: 6.4
+  - Level: 56
+    HpMultiplier: 7.6
+    AttackMultiplier: 6.5
+  - Level: 57
+    HpMultiplier: 7.72
+    AttackMultiplier: 6.6
+  - Level: 58
+    HpMultiplier: 7.84
+    AttackMultiplier: 6.7
+  - Level: 59
+    HpMultiplier: 7.96
+    AttackMultiplier: 6.8
+  - Level: 60
+    HpMultiplier: 8.08
+    AttackMultiplier: 6.9
+  - Level: 61
+    HpMultiplier: 8.2
+    AttackMultiplier: 7
+  - Level: 62
+    HpMultiplier: 8.32
+    AttackMultiplier: 7.1
+  - Level: 63
+    HpMultiplier: 8.44
+    AttackMultiplier: 7.2
+  - Level: 64
+    HpMultiplier: 8.56
+    AttackMultiplier: 7.3
+  - Level: 65
+    HpMultiplier: 8.68
+    AttackMultiplier: 7.4
+  - Level: 66
+    HpMultiplier: 8.8
+    AttackMultiplier: 7.5
+  - Level: 67
+    HpMultiplier: 8.92
+    AttackMultiplier: 7.6
+  - Level: 68
+    HpMultiplier: 9.04
+    AttackMultiplier: 7.7
+  - Level: 69
+    HpMultiplier: 9.16
+    AttackMultiplier: 7.8
+  - Level: 70
+    HpMultiplier: 9.28
+    AttackMultiplier: 7.9
+  - Level: 71
+    HpMultiplier: 9.4
+    AttackMultiplier: 8
+  - Level: 72
+    HpMultiplier: 9.52
+    AttackMultiplier: 8.1
+  - Level: 73
+    HpMultiplier: 9.64
+    AttackMultiplier: 8.2
+  - Level: 74
+    HpMultiplier: 9.76
+    AttackMultiplier: 8.3
+  - Level: 75
+    HpMultiplier: 9.88
+    AttackMultiplier: 8.4
+  - Level: 76
+    HpMultiplier: 10
+    AttackMultiplier: 8.5
+  - Level: 77
+    HpMultiplier: 10.12
+    AttackMultiplier: 8.6
+  - Level: 78
+    HpMultiplier: 10.24
+    AttackMultiplier: 8.7
+  - Level: 79
+    HpMultiplier: 10.36
+    AttackMultiplier: 8.8
+  - Level: 80
+    HpMultiplier: 10.48
+    AttackMultiplier: 8.9
+  - Level: 81
+    HpMultiplier: 10.6
+    AttackMultiplier: 9
+  - Level: 82
+    HpMultiplier: 10.72
+    AttackMultiplier: 9.1
+  - Level: 83
+    HpMultiplier: 10.84
+    AttackMultiplier: 9.2
+  - Level: 84
+    HpMultiplier: 10.96
+    AttackMultiplier: 9.3
+  - Level: 85
+    HpMultiplier: 11.08
+    AttackMultiplier: 9.4
+  - Level: 86
+    HpMultiplier: 11.2
+    AttackMultiplier: 9.5
+  - Level: 87
+    HpMultiplier: 11.32
+    AttackMultiplier: 9.6
+  - Level: 88
+    HpMultiplier: 11.44
+    AttackMultiplier: 9.7
+  - Level: 89
+    HpMultiplier: 11.56
+    AttackMultiplier: 9.8
+  - Level: 90
+    HpMultiplier: 11.68
+    AttackMultiplier: 9.9
+  - Level: 91
+    HpMultiplier: 11.8
+    AttackMultiplier: 10
+  - Level: 92
+    HpMultiplier: 11.92
+    AttackMultiplier: 10.1
+  - Level: 93
+    HpMultiplier: 12.04
+    AttackMultiplier: 10.2
+  - Level: 94
+    HpMultiplier: 12.16
+    AttackMultiplier: 10.3
+  - Level: 95
+    HpMultiplier: 12.28
+    AttackMultiplier: 10.4
+  - Level: 96
+    HpMultiplier: 12.4
+    AttackMultiplier: 10.5
+  - Level: 97
+    HpMultiplier: 12.52
+    AttackMultiplier: 10.6
+  - Level: 98
+    HpMultiplier: 12.64
+    AttackMultiplier: 10.7
+  - Level: 99
+    HpMultiplier: 12.76
+    AttackMultiplier: 10.8
+  - Level: 100
+    HpMultiplier: 12.88
+    AttackMultiplier: 10.9
+  _classModifiers:
+  - PlayerClass: 0
+    OutgoingDamageMultiplier: 1
+    IncomingDamageMultiplier: 0.9
+  - PlayerClass: 1
+    OutgoingDamageMultiplier: 1.2
+    IncomingDamageMultiplier: 1.1
+  - PlayerClass: 2
+    OutgoingDamageMultiplier: 1.1
+    IncomingDamageMultiplier: 1
