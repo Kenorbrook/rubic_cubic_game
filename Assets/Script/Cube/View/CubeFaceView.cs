@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class CubeFaceView : MonoBehaviour
 {
@@ -11,10 +12,52 @@ public class CubeFaceView : MonoBehaviour
     public void Initialize()
     {
         if (_cells == null || _cells.Length != 9)
+        {
             Debug.LogError($"{_side} must have 9 cells");
+            return;
+        }
+
+        FreezeGridLayout();
 
         foreach (var c in _cells)
             c?.Initialize();
+    }
+
+    public void FreezeGridLayout()
+    {
+        var grid = GetComponent<GridLayoutGroup>();
+        if (grid == null || _cells == null || _cells.Length != 9)
+            return;
+
+        // Android can run Initialize before its first Canvas layout pass. In that
+        // case disabling GridLayoutGroup used to leave all cells at an invalid
+        // position/size and the complete 2D cube appeared missing. Position the
+        // authored 3x3 grid explicitly so the result is identical on every device.
+        var cellSize = grid.cellSize;
+        var spacing = grid.spacing;
+        var gridSize = new Vector2(
+            cellSize.x * 3f + spacing.x * 2f,
+            cellSize.y * 3f + spacing.y * 2f);
+
+        for (var index = 0; index < _cells.Length; index++)
+        {
+            if (_cells[index] == null || _cells[index].transform is not RectTransform cellRect)
+                continue;
+
+            var column = index % 3;
+            var row = index / 3;
+            cellRect.anchorMin = new Vector2(0.5f, 0.5f);
+            cellRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cellRect.pivot = new Vector2(0.5f, 0.5f);
+            cellRect.sizeDelta = cellSize;
+            cellRect.anchoredPosition = new Vector2(
+                -gridSize.x * 0.5f + cellSize.x * 0.5f + column * (cellSize.x + spacing.x),
+                gridSize.y * 0.5f - cellSize.y * 0.5f - row * (cellSize.y + spacing.y));
+            cellRect.localRotation = Quaternion.identity;
+            cellRect.localScale = Vector3.one;
+        }
+
+        grid.enabled = false;
     }
 
     // ===== MODEL → VIEW =====
@@ -91,9 +134,19 @@ public class CubeFaceView : MonoBehaviour
         _animator.AnimateRowRotation(cells, dir, onComplete);
     }
 
+    public void AnimateRow(Transform[] cells, RotationDirection dir, float initialOffset, System.Action onComplete)
+    {
+        _animator.AnimateRowRotation(cells, dir, initialOffset, onComplete);
+    }
+
     public void AnimateColumn(Transform[] cells, RotationDirection dir, System.Action onComplete)
     {
         _animator.AnimateColumnRotation(cells, dir, onComplete);
+    }
+
+    public void AnimateColumn(Transform[] cells, RotationDirection dir, float initialOffset, System.Action onComplete)
+    {
+        _animator.AnimateColumnRotation(cells, dir, initialOffset, onComplete);
     }
 
     public void AnimateFace(Transform[] cells, RotationDirection dir, System.Action onComplete)

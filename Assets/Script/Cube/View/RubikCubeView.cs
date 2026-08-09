@@ -46,6 +46,13 @@ public class RubikCubeView : MonoBehaviour
 
 
     private int _pendingAnimations;
+    private RubikCube3DPresenter _threeDPresenter;
+    private bool _use3D;
+    private bool _previewHorizontal;
+    private int _previewIndex = -1;
+    private float _previewOffset;
+    private Transform[] _previewCells;
+    private Vector3[] _previewBasePositions;
 
   
 
@@ -53,6 +60,11 @@ public class RubikCubeView : MonoBehaviour
     {
         _viewModel = viewModel;
         InitializeFaceViews();
+        _threeDPresenter = GetComponent<RubikCube3DPresenter>();
+        if (_threeDPresenter == null)
+            _threeDPresenter = gameObject.AddComponent<RubikCube3DPresenter>();
+        _threeDPresenter.Initialize(this, viewModel);
+        Set3DMode(CubeViewPreferences.Use3D);
         SetupUI();
         StartCoroutine(InitializeViewModel());
     }
@@ -129,16 +141,27 @@ public class RubikCubeView : MonoBehaviour
     
     private void HandleLayerRotationStarted(CubeAxis axis, int index, RotationDirection dir, MoveSource source)
     {
+        if (_use3D)
+        {
+            _threeDPresenter.AnimateLayer(axis, index, dir, source);
+            return;
+        }
         // View decides animation speed based on move metadata from VM.
         SetAnimationSpeed(source == MoveSource.Shuffle ? _shuffleSpeed : _normalSpeed);
 
         _pendingAnimations = 0;
+        // The 2D net animates the layer the player actually touched. Moving all
+        // neighbouring mini-faces at different scales caused cells to scatter
+        // and made the final direction look reversed on mobile.
         if (axis == CubeAxis.Y)
-            AnimateLayerY(index, dir);
+            AnimateRow(_frontFaceView, index, dir);
         else if (axis == CubeAxis.X)
-            AnimateLayerX(index, dir);
-        else if (axis == CubeAxis.Z)
-            AnimateLayerZ(index, dir);
+            AnimateColumn(_frontFaceView, index, dir);
+        else
+        {
+            _viewModel.CompleteRotation();
+            return;
+        }
         
     }
     
@@ -188,14 +211,28 @@ public class RubikCubeView : MonoBehaviour
     {
         _pendingAnimations++;
         var cells = face.GetRow(row);
-        face.AnimateRow(cells, dir, OnSingleAnimationCompleted);
+        if (face == _frontFaceView && _previewHorizontal && _previewIndex == row)
+        {
+            RestorePreviewPositions();
+            face.AnimateRow(cells, dir, _previewOffset, OnSingleAnimationCompleted);
+            ClearPreviewState();
+        }
+        else
+            face.AnimateRow(cells, dir, OnSingleAnimationCompleted);
     }
 
     private void AnimateColumn(CubeFaceView face, int col, RotationDirection dir)
     {
         _pendingAnimations++;
         var cells = face.GetColumn(col);
-        face.AnimateColumn(cells, dir, OnSingleAnimationCompleted);
+        if (face == _frontFaceView && !_previewHorizontal && _previewIndex == col)
+        {
+            RestorePreviewPositions();
+            face.AnimateColumn(cells, dir, _previewOffset, OnSingleAnimationCompleted);
+            ClearPreviewState();
+        }
+        else
+            face.AnimateColumn(cells, dir, OnSingleAnimationCompleted);
     }
 
     private void AnimateFace(CubeFaceView face, RotationDirection dir)
@@ -225,6 +262,7 @@ public class RubikCubeView : MonoBehaviour
 
     private void HandleFaceUpdated(Dictionary<CubeSide, CubeFaceModel> models)
     {
+        _threeDPresenter?.RefreshColors();
         foreach (var face in _faceViews)
         {
             if (_faceViews.TryGetValue(face.Key, out var view))
@@ -261,10 +299,86 @@ public class RubikCubeView : MonoBehaviour
         _viewModel.ShuffleCube(20);
     }
 
+    public void PreviewFrontLayer(bool horizontal, int index, float offset)
+    {
+        if (_use3D || _viewModel == null || _viewModel.IsAnimating) return;
+        if (_previewCells == null || _previewHorizontal != horizontal || _previewIndex != index)
+        {
+            CancelFrontLayerPreview();
+            _previewHorizontal = horizontal;
+            _previewIndex = index;
+            _previewCells = horizontal ? _frontFaceView.GetRow(index) : _frontFaceView.GetColumn(index);
+            _previewBasePositions = new Vector3[_previewCells.Length];
+            for (var i = 0; i < _previewCells.Length; i++) _previewBasePositions[i] = _previewCells[i].localPosition;
+        }
+        _previewOffset = offset;
+        RowColumnAnimator.ApplyWrappedOffset(_previewCells, _previewBasePositions, offset, horizontal);
+    }
+
+    public void CancelFrontLayerPreview()
+    {
+        RestorePreviewPositions();
+        ClearPreviewState();
+    }
+
+    private void RestorePreviewPositions()
+    {
+        if (_previewCells == null || _previewBasePositions == null) return;
+        for (var i = 0; i < _previewCells.Length; i++)
+            if (_previewCells[i] != null) _previewCells[i].localPosition = _previewBasePositions[i];
+    }
+
+    private void ClearPreviewState()
+    {
+        _previewCells = null;
+        _previewBasePositions = null;
+        _previewIndex = -1;
+        _previewOffset = 0f;
+    }
+
+    public void CompleteVisualRotation()
+    {
+        _viewModel.CompleteRotation();
+    }
+
+    public void Set3DMode(bool enabled)
+    {
+        _use3D = enabled;
+        _threeDPresenter?.SetVisible(enabled);
+        foreach (var face in _faceViews.Values)
+        {
+            if (face == null)
+                continue;
+
+            face.gameObject.SetActive(!enabled);
+            if (!enabled)
+                face.FreezeGridLayout();
+        }
+    }
+
+    public bool Is3DMode => _use3D;
+
+    public void Notify3DUserSwipe(SwipeDirection direction)
+    {
+        if (!_use3D || _inputControllers == null)
+            return;
+
+        foreach (var controller in _inputControllers)
+        {
+            if (controller is FrontFaceInputController frontFaceInput)
+            {
+                frontFaceInput.NotifyExternalSwipe(direction);
+                return;
+            }
+        }
+    }
+
     private void OnResetClicked()
     {
         _viewModel.ResetCube();
+        _threeDPresenter?.RecenterView();
         UpdateAllFaces(false);
+        _threeDPresenter?.RefreshColors();
     }
 
 

@@ -24,6 +24,9 @@ public class SwipeDetector : MonoBehaviour
     private bool _isSwiping;
 
     public event Action<SwipeDirection, Vector2> OnSwipe;
+    public event Action<Vector2> OnSwipeStarted;
+    public event Action<Vector2, Vector2> OnSwipeProgress;
+    public event Action OnSwipeCancelled;
 
     private void Update()
     {
@@ -38,6 +41,10 @@ public class SwipeDetector : MonoBehaviour
         if (Touchscreen.current != null)
         {
             var touch = Touchscreen.current.primaryTouch;
+            var touchOwnsPointer = Application.isMobilePlatform ||
+                                   touch.press.isPressed ||
+                                   touch.press.wasPressedThisFrame ||
+                                   touch.press.wasReleasedThisFrame;
 
             if (touch.press.wasPressedThisFrame)
             {
@@ -47,6 +54,14 @@ public class SwipeDetector : MonoBehaviour
             {
                 EndSwipe(touch.position.ReadValue());
             }
+            else if (touch.press.isPressed && _isSwiping)
+                OnSwipeProgress?.Invoke(_startTouchPosition, touch.position.ReadValue());
+
+            // Android also emits a synthetic mouse event for the same finger.
+            // Consuming both streams can replace the original start point and
+            // occasionally flip a nearly horizontal swipe.
+            if (touchOwnsPointer)
+                return;
         }
         if (Mouse.current != null)
         {
@@ -58,6 +73,8 @@ public class SwipeDetector : MonoBehaviour
             {
                 EndSwipe(Mouse.current.position.ReadValue());
             }
+            else if (Mouse.current.leftButton.isPressed && _isSwiping)
+                OnSwipeProgress?.Invoke(_startTouchPosition, Mouse.current.position.ReadValue());
         }
     }
 
@@ -66,6 +83,7 @@ public class SwipeDetector : MonoBehaviour
         _startTouchPosition = position;
         _startTime = Time.time;
         _isSwiping = true;
+        OnSwipeStarted?.Invoke(position);
     }
 
     private void EndSwipe(Vector2 position)
@@ -91,6 +109,7 @@ public class SwipeDetector : MonoBehaviour
         }
         else
         {
+            OnSwipeCancelled?.Invoke();
             Debug.Log($"Swipe too slow or short. Required: <{_maxSwipeTime}s and >{_minSwipeDistance}px");
         }
     }

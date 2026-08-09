@@ -92,6 +92,16 @@ fabric.properties
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
 
+# Local Unity/Android build outputs and validation artifacts
+/.utmp/
+/Validation/
+/Assets/Screenshots/
+/Assets/Screenshots.meta
+
+# Local settings left by the removed Unity AI Assistant package
+/ProjectSettings/AI.Assistant/
+/ProjectSettings/Packages/com.unity.ai.assistant/
+
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/

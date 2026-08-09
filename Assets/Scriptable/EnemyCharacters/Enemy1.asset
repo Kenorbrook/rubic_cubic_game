@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e8fd60af08f42879c77d6db4cf232e0, type: 3}
   m_Name: Enemy1
   m_EditorClassIdentifier: Assembly-CSharp::EnemyCharacter
-  Sprite: {fileID: 21300000, guid: 7ea1f9f89a9e5084aa99fe9c647d4cff, type: 3}
+  Sprite: {fileID: 21300000, guid: 1909a5c4fbc9c7441aa5c62c00ff2bef, type: 3}
   BaseHp: 100
   BaseAttack: 60
   AttackFrequencyTurns: 10

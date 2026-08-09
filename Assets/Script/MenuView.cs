@@ -9,6 +9,7 @@ public class MenuView : MonoBehaviour
     [SerializeField] private Button _close;
     [SerializeField] private Button _character1;
     [SerializeField] private Button _character2;
+    [SerializeField] private GameObject _mainPanel;
     [SerializeField] private GameObject _chooseCharacterPanel;
 
     private IGameSaveService _saveService;
@@ -30,10 +31,14 @@ public class MenuView : MonoBehaviour
     private void CloseChooseCharacter()
     {
         _chooseCharacterPanel.SetActive(false);
+        if (_mainPanel != null)
+            _mainPanel.SetActive(true);
     }
 
     private void ChooseCharacterPanel()
     {
+        if (_mainPanel != null)
+            _mainPanel.SetActive(false);
         _chooseCharacterPanel.SetActive(true);
     }
 

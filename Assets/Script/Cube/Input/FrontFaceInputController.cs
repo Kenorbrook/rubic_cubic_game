@@ -19,6 +19,8 @@ public class FrontFaceInputController : InputController
         if (_swipeDetector != null)
         {
             _swipeDetector.OnSwipe += HandleSwipe;
+            _swipeDetector.OnSwipeProgress += HandleSwipeProgress;
+            _swipeDetector.OnSwipeCancelled += HandleSwipeCancelled;
         }
     }
 
@@ -27,6 +29,8 @@ public class FrontFaceInputController : InputController
         if (_swipeDetector != null)
         {
             _swipeDetector.OnSwipe -= HandleSwipe;
+            _swipeDetector.OnSwipeProgress -= HandleSwipeProgress;
+            _swipeDetector.OnSwipeCancelled -= HandleSwipeCancelled;
         }
     }
 
@@ -35,6 +39,11 @@ public class FrontFaceInputController : InputController
     /// </summary>
     private void HandleSwipe(SwipeDirection direction, Vector2 startPosition)
     {
+        // The 3D presenter owns pointer gestures while its surface is visible.
+        // Handling the same gesture here can rotate a layer twice or in reverse.
+        if (_cubeView == null || _cubeView.Is3DMode)
+            return;
+
         // Блокируем ввод, если уже идет анимация
         if (_isInputBlocked)
         {
@@ -96,6 +105,28 @@ public class FrontFaceInputController : InputController
             FrontFaceSwipePerformed?.Invoke(direction);
             BlockInput();
         }
+    }
+
+    public void NotifyExternalSwipe(SwipeDirection direction)
+    {
+        FrontFaceSwipePerformed?.Invoke(direction);
+    }
+
+    private void HandleSwipeProgress(Vector2 startPosition, Vector2 currentPosition)
+    {
+        if (_isInputBlocked || _cubeView == null || _cubeView.Is3DMode || !IsPointerOverFrontFace(startPosition)) return;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(_frontFaceRect, startPosition, Camera.main, out var localPoint);
+        GetCellPosition(localPoint, out var row, out var col);
+        var delta = currentPosition - startPosition;
+        var horizontal = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y);
+        var cellSize = horizontal ? _frontFaceRect.rect.width / 3f : _frontFaceRect.rect.height / 3f;
+        var offset = Mathf.Clamp(horizontal ? delta.x : delta.y, -cellSize, cellSize);
+        _cubeView.PreviewFrontLayer(horizontal, horizontal ? row : col, offset);
+    }
+
+    private void HandleSwipeCancelled()
+    {
+        _cubeView?.CancelFrontLayerPreview();
     }
 
     private void GetCellPosition(Vector2 localPoint, out int row, out int col)

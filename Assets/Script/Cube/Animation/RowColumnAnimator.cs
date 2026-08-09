@@ -19,13 +19,16 @@ public class RowColumnAnimator : MonoBehaviour
 
 
     public void AnimateRowRotation(Transform[] cells, RotationDirection direction, Action onComplete)
+        => AnimateRowRotation(cells, direction, 0f, onComplete);
+
+    public void AnimateRowRotation(Transform[] cells, RotationDirection direction, float initialOffset, Action onComplete)
     {
         if (_currentAnimation != null)
         {
             StopCoroutine(_currentAnimation);
         }
 
-        _currentAnimation = StartCoroutine(RowRotationCoroutine(cells, direction, onComplete));
+        _currentAnimation = StartCoroutine(RowRotationCoroutine(cells, direction, initialOffset, onComplete));
     }
 
     public void AnimateAllRotation(Transform[] cells, RotationDirection direction, Action onComplete)
@@ -39,13 +42,16 @@ public class RowColumnAnimator : MonoBehaviour
     }
 
     public void AnimateColumnRotation(Transform[] cells, RotationDirection direction, Action onComplete)
+        => AnimateColumnRotation(cells, direction, 0f, onComplete);
+
+    public void AnimateColumnRotation(Transform[] cells, RotationDirection direction, float initialOffset, Action onComplete)
     {
         if (_currentAnimation != null)
         {
             StopCoroutine(_currentAnimation);
         }
 
-        _currentAnimation = StartCoroutine(ColumnRotationCoroutine(cells, direction, onComplete));
+        _currentAnimation = StartCoroutine(ColumnRotationCoroutine(cells, direction, initialOffset, onComplete));
     }
 
     public void StopAnimation()
@@ -58,17 +64,16 @@ public class RowColumnAnimator : MonoBehaviour
 
     }
     
-    private IEnumerator RowRotationCoroutine(Transform[] cells, RotationDirection direction, Action onComplete)
+    private IEnumerator RowRotationCoroutine(Transform[] cells, RotationDirection direction, float initialOffset, Action onComplete)
     {
-
-        float moveDistance = 100f;
-        float targetOffset = direction == RotationDirection.Clockwise ? moveDistance : -moveDistance;
-
         Vector3[] startPositions = new Vector3[cells.Length];
         for (int i = 0; i < cells.Length; i++)
         {
             startPositions[i] = cells[i].localPosition;
         }
+
+        float moveDistance = GetCellStep(startPositions, true);
+        float targetOffset = direction == RotationDirection.Clockwise ? moveDistance : -moveDistance;
 
         float elapsedTime = 0f;
 
@@ -77,13 +82,9 @@ public class RowColumnAnimator : MonoBehaviour
             elapsedTime += Time.deltaTime * SpeedMultiplier;
 
             float t = elapsedTime / _rotationDuration;
-            float curveValue = _rotationCurve.Evaluate(t);
-
-            for (int i = 0; i < cells.Length; i++)
-            {
-                Vector3 offset = new Vector3(targetOffset * curveValue, 0, 0);
-                cells[i].localPosition = startPositions[i] + offset;
-            }
+            float curveValue = _rotationCurve.Evaluate(Mathf.Clamp01(t));
+            float offset = Mathf.Lerp(initialOffset, targetOffset, curveValue);
+            ApplyWrappedOffset(cells, startPositions, offset, true, moveDistance);
 
             yield return null;
         }
@@ -161,17 +162,16 @@ public class RowColumnAnimator : MonoBehaviour
         onComplete?.Invoke();
     }
 
-    private IEnumerator ColumnRotationCoroutine(Transform[] cells, RotationDirection direction, Action onComplete)
+    private IEnumerator ColumnRotationCoroutine(Transform[] cells, RotationDirection direction, float initialOffset, Action onComplete)
     {
-
-        float moveDistance = 100f; 
-        float targetOffset = direction == RotationDirection.Clockwise ? -moveDistance : moveDistance;
-
         Vector3[] startPositions = new Vector3[cells.Length];
         for (int i = 0; i < cells.Length; i++)
         {
             startPositions[i] = cells[i].localPosition;
         }
+
+        float moveDistance = GetCellStep(startPositions, false);
+        float targetOffset = direction == RotationDirection.Clockwise ? -moveDistance : moveDistance;
 
         float elapsedTime = 0f;
 
@@ -180,13 +180,9 @@ public class RowColumnAnimator : MonoBehaviour
             elapsedTime += Time.deltaTime * SpeedMultiplier;
 
             float t = elapsedTime / _rotationDuration;
-            float curveValue = _rotationCurve.Evaluate(t);
-
-            for (int i = 0; i < cells.Length; i++)
-            {
-                Vector3 offset = new Vector3(0, targetOffset * curveValue, 0);
-                cells[i].localPosition = startPositions[i] + offset;
-            }
+            float curveValue = _rotationCurve.Evaluate(Mathf.Clamp01(t));
+            float offset = Mathf.Lerp(initialOffset, targetOffset, curveValue);
+            ApplyWrappedOffset(cells, startPositions, offset, false, moveDistance);
 
             yield return null;
         }
@@ -199,6 +195,56 @@ public class RowColumnAnimator : MonoBehaviour
         _currentAnimation = null;
 
         onComplete?.Invoke();
+    }
+
+    public static void ApplyWrappedOffset(Transform[] cells, Vector3[] basePositions, float offset, bool horizontal)
+    {
+        ApplyWrappedOffset(cells, basePositions, offset, horizontal, GetCellStep(basePositions, horizontal));
+    }
+
+    private static void ApplyWrappedOffset(Transform[] cells, Vector3[] basePositions, float offset, bool horizontal, float step)
+    {
+        if (cells == null || basePositions == null || cells.Length != basePositions.Length || step <= 0f)
+            return;
+
+        var min = float.MaxValue;
+        var max = float.MinValue;
+        for (var i = 0; i < basePositions.Length; i++)
+        {
+            var value = horizontal ? basePositions[i].x : basePositions[i].y;
+            min = Mathf.Min(min, value);
+            max = Mathf.Max(max, value);
+        }
+
+        var cycle = step * cells.Length;
+        var lower = min - step * 0.5f;
+        var upper = max + step * 0.5f;
+        for (var i = 0; i < cells.Length; i++)
+        {
+            var position = basePositions[i];
+            var value = (horizontal ? position.x : position.y) + offset;
+            while (value > upper) value -= cycle;
+            while (value < lower) value += cycle;
+            if (horizontal) position.x = value;
+            else position.y = value;
+            cells[i].localPosition = position;
+        }
+    }
+
+    private static float GetCellStep(Vector3[] positions, bool horizontal)
+    {
+        if (positions == null || positions.Length < 2)
+            return 100f;
+
+        var values = new float[positions.Length];
+        for (var i = 0; i < positions.Length; i++)
+            values[i] = horizontal ? positions[i].x : positions[i].y;
+        Array.Sort(values);
+
+        var total = 0f;
+        for (var i = 1; i < values.Length; i++)
+            total += Mathf.Abs(values[i] - values[i - 1]);
+        return Mathf.Max(1f, total / (values.Length - 1));
     }
 
 }

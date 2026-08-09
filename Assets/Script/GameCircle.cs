@@ -88,6 +88,7 @@ public class GameCircle : MonoBehaviour
 
     private void OnEnemySpawned(EnemyInstance enemy)
     {
+        _warriorTimingMiniGameInstance?.SetBattleLevel(enemy.Level);
         _gameView.SetupEnemy(enemy.Character.Sprite);
         _gameView.SetEnemyHp(enemy.CurrentHp, enemy.MaxHp, enemy.Level);
         _gameView.ClearEnemyDamage();
@@ -98,7 +99,10 @@ public class GameCircle : MonoBehaviour
     {
         _gameView.SetEnemyHp(enemy.CurrentHp, enemy.MaxHp, enemy.Level);
         if (damage > 0)
+        {
+            _gameView.PlayPlayerAttackFeedback();
             _gameView.PlayEnemyHitFeedback();
+        }
 
         UpdateEnemyAttackCountdown();
     }
@@ -116,6 +120,7 @@ public class GameCircle : MonoBehaviour
         if (enemyDamage > 0)
         {
             _gameView.ShowEnemyDamage(enemyDamage);
+            _gameView.PlayEnemyAttackFeedback();
             _gameView.PlayPlayerHitFeedback();
         }
         else

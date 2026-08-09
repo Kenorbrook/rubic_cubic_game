@@ -15,12 +15,13 @@ public class GameView : MonoBehaviour
     [SerializeField] private TMP_Text _playerShield;
     [SerializeField] private TMP_Text _enemyHpText;
     [SerializeField] private TMP_Text _enemyDamageText;
+    [SerializeField] private Image _playerHpFill;
+    [SerializeField] private Image _enemyHpFill;
     [SerializeField] private GameObject _battleEndPanel;
     [SerializeField] private TMP_Text _battleEndTitleText;
     [SerializeField] private TMP_Text _battleEndStatsText;
     private string _enemyHpBaseText = string.Empty;
     private int _cachedTurnsUntilEnemyAttack;
-
     private void Awake()
     {
         if (_pause != null)
@@ -32,31 +33,36 @@ public class GameView : MonoBehaviour
 
     public void SetupPlayer(Sprite sprite)
     {
-        _player.Setup(sprite);
+        _player.Setup(sprite, true);
     }
 
     public void SetupEnemy(Sprite sprite)
     {
-        _enemy.Setup(sprite);
+        _enemy.Setup(sprite, false);
     }
 
     public void SetPlayerHp(int currentHp, int maxHp, int shield)
     {
         if (_playerHpText != null)
-            _playerHpText.text = $"HP игрока: {currentHp}/{maxHp}";
-        _playerShield.text = $"Щит: {shield}";
+            _playerHpText.text = $"{currentHp} / {maxHp}";
+        if (_playerShield != null)
+            _playerShield.text = shield > 0 ? $"ЩИТ  {shield}" : string.Empty;
+        if (_playerHpFill != null)
+            _playerHpFill.fillAmount = maxHp > 0 ? Mathf.Clamp01((float)currentHp / maxHp) : 0f;
     }
 
     public void SetEnemyHp(int currentHp, int maxHp, int level)
     {
-        _enemyHpBaseText = $"Враг L {level}: {currentHp}/{maxHp} HP";
+        _enemyHpBaseText = $"УР. {level}     {currentHp} / {maxHp}";
         RefreshEnemyHpText();
+        if (_enemyHpFill != null)
+            _enemyHpFill.fillAmount = maxHp > 0 ? Mathf.Clamp01((float)currentHp / maxHp) : 0f;
     }
 
     public void ShowEnemyDamage(int damage)
     {
         if (_enemyDamageText != null)
-            _enemyDamageText.text = $"Урон врага: {damage}";
+            _enemyDamageText.text = $"УРОН  {damage}";
     }
 
     public void ClearEnemyDamage()
@@ -75,6 +81,18 @@ public class GameView : MonoBehaviour
     {
         if (_player != null)
             _player.PlayHitAnimation();
+    }
+
+    public void PlayPlayerAttackFeedback()
+    {
+        if (_player != null)
+            _player.PlayAttackAnimation();
+    }
+
+    public void PlayEnemyAttackFeedback()
+    {
+        if (_enemy != null)
+            _enemy.PlayAttackAnimation();
     }
 
     public void PlayEnemyHitFeedback()
@@ -131,8 +149,7 @@ public class GameView : MonoBehaviour
 
 
         _enemyHpText.text = _cachedTurnsUntilEnemyAttack > 0
-            ? $"{_enemyHpBaseText}\nДо удара врага: {_cachedTurnsUntilEnemyAttack}"
+            ? $"{_enemyHpBaseText}     УДАР: {_cachedTurnsUntilEnemyAttack}"
             : _enemyHpBaseText;
     }
 }
-

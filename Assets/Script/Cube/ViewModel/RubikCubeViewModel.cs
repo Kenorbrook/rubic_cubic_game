@@ -26,6 +26,8 @@ public class RubikCubeViewModel
     private ICubeMatcher _matcher;
     private IPatternApplier _patternApplier;
     private bool _isShuffleInProgress;
+    private int _shuffleCorrectionAttempts;
+    private const int MaxShuffleCorrectionAttempts = 16;
 
     public RubikCubeViewModel(RubikCubeModel model)
     {
@@ -86,6 +88,7 @@ public class RubikCubeViewModel
         if (!_isShuffleInProgress)
         {
             _isShuffleInProgress = true;
+            _shuffleCorrectionAttempts = 0;
             OnShuffleStateChanged?.Invoke(true);
         }
 
@@ -138,8 +141,9 @@ public class RubikCubeViewModel
 
     private bool NeedFinishShuffle()
     {
-        if (_matcher.TryMatch(_model.Faces))
+        if (_matcher.TryMatch(_model.Faces) && _shuffleCorrectionAttempts < MaxShuffleCorrectionAttempts)
         {
+            _shuffleCorrectionAttempts++;
             EnqueueShuffleMoves(2);
             return false;
         }

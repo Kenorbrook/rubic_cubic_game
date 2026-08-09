@@ -7,24 +7,35 @@ public class WarriorTimingMiniGame : MonoBehaviour
     [SerializeField] private RectTransform _laneRect;
     [SerializeField] private RectTransform _barsContainer;
     [SerializeField] private WarriorTimingBar _barPrefab;
+    [SerializeField] private RectTransform _targetZone;
+    [SerializeField] private UnityEngine.UI.Image _targetZoneImage;
 
     [Header("Timing")]
-    [SerializeField] private float _baseSpeed = 300f;
+    [SerializeField] private float _baseSpeed = 95f;
+    [SerializeField] private float _speedIncreasePerLevel = 22.77778f;
+    [SerializeField] private float _maxSpeed = 300f;
+    [SerializeField] private Vector2 _firstLevelSpawnIntervalRange = new Vector2(4.5f, 6f);
     [SerializeField] private Vector2 _spawnIntervalRange = new Vector2(1.5f, 2.4f);
+    [SerializeField, Min(2)] private int _maxDifficultyLevel = 10;
     [SerializeField] private float _rightSwipeStartOffsetFromCenter = 42f;
     [SerializeField] private float _leftSwipeEndOffsetFromCenter = -42f;
+    [SerializeField, Min(24f)] private float _targetZoneWidth = 180f;
     [SerializeField] private float _shuffleSpeedMultiplier = 0.05f;
 
     [Header("Visual")]
     [SerializeField] private Color _defaultColor = new Color(1f, 1f, 1f, 0.95f);
     [SerializeField] private Color _successColor = new Color(0.15f, 0.85f, 0.25f, 1f);
     [SerializeField] private Color _missColor = new Color(0.9f, 0.3f, 0.3f, 1f);
+    [SerializeField] private Color _targetZoneIdleColor = new Color(0.91f, 0.67f, 0.29f, 0.18f);
+    [SerializeField] private Color _targetZoneActiveColor = new Color(1f, 0.82f, 0.35f, 0.58f);
     [SerializeField] private ArrowSprites _arrowSprites;
 
     private ICombatService _combatService;
     private readonly List<ActiveBarState> _activeBars = new List<ActiveBarState>(8);
     private float _spawnCooldown;
     private float _speedMultiplier = 1f;
+    private float _currentSpeed;
+    private Vector2 _currentSpawnIntervalRange;
     private bool _isConfigured;
     private bool _missingRefsLogged;
     private FrontFaceInputController _inputSource;
@@ -48,6 +59,8 @@ public class WarriorTimingMiniGame : MonoBehaviour
         if (scaledDt > 0f)
             UpdateBars(scaledDt);
 
+        RefreshTargetZone();
+
         if (_speedMultiplier <= 0f)
             return;
 
@@ -63,18 +76,31 @@ public class WarriorTimingMiniGame : MonoBehaviour
         _inputSource = inputSource;
         SubscribeInput();
         _speedMultiplier = 1f;
+        _currentSpeed = Mathf.Min(_baseSpeed, _maxSpeed);
+        _currentSpawnIntervalRange = _firstLevelSpawnIntervalRange;
+        SetTargetZoneWidth(_targetZoneWidth);
         ClearBars();
         _missingRefsLogged = false;
         _isConfigured = ValidateReferences();
         if (!_isConfigured)
             return;
 
-        _spawnCooldown = Random.Range(_spawnIntervalRange.x, _spawnIntervalRange.y);
+        _spawnCooldown = Random.Range(_currentSpawnIntervalRange.x, _currentSpawnIntervalRange.y);
     }
 
     public void SetShuffleState(bool isShuffling)
     {
         _speedMultiplier = isShuffling ? Mathf.Clamp01(_shuffleSpeedMultiplier) : 1f;
+    }
+
+    public void SetBattleLevel(int level)
+    {
+        var completedLevels = Mathf.Clamp(level - 1, 0, _maxDifficultyLevel - 1);
+        var difficulty = completedLevels / (float)(_maxDifficultyLevel - 1);
+        _currentSpeed = Mathf.Min(_maxSpeed, _baseSpeed + completedLevels * _speedIncreasePerLevel);
+        _currentSpawnIntervalRange = Vector2.Lerp(_firstLevelSpawnIntervalRange, _spawnIntervalRange, difficulty);
+        if (_spawnCooldown > 0f)
+            _spawnCooldown = Mathf.Min(_spawnCooldown, _currentSpawnIntervalRange.y);
     }
 
     private void SpawnBar()
@@ -100,7 +126,7 @@ public class WarriorTimingMiniGame : MonoBehaviour
         rect.anchoredPosition = new Vector2(spawnX, 0f);
 
         _activeBars.Add(new ActiveBarState(bar, promptType));
-        _spawnCooldown = Random.Range(_spawnIntervalRange.x, _spawnIntervalRange.y);
+        _spawnCooldown = Random.Range(_currentSpawnIntervalRange.x, _currentSpawnIntervalRange.y);
     }
 
     private void UpdateBars(float dt)
@@ -121,7 +147,7 @@ public class WarriorTimingMiniGame : MonoBehaviour
             }
 
             var pos = barState.Rect.anchoredPosition;
-            pos.x -= _baseSpeed * dt;
+            pos.x -= _currentSpeed * dt;
             barState.Rect.anchoredPosition = pos;
 
             if (!barState.Resolved && pos.x < leftSwipeEndX)
@@ -153,6 +179,45 @@ public class WarriorTimingMiniGame : MonoBehaviour
 
         candidate.MarkSuccess();
         candidate.Bar.SetFillColor(_successColor);
+        RefreshTargetZone();
+    }
+
+    public void SetTargetZoneWidth(float width)
+    {
+        _targetZoneWidth = Mathf.Max(24f, width);
+        _rightSwipeStartOffsetFromCenter = _targetZoneWidth * 0.5f;
+        _leftSwipeEndOffsetFromCenter = -_targetZoneWidth * 0.5f;
+        if (_targetZone != null)
+        {
+            var size = _targetZone.sizeDelta;
+            size.x = _targetZoneWidth;
+            _targetZone.sizeDelta = size;
+        }
+    }
+
+    private void RefreshTargetZone()
+    {
+        if (_targetZoneImage == null || _laneRect == null)
+            return;
+
+        var lane = _laneRect.rect;
+        var centerX = (lane.xMin + lane.xMax) * 0.5f;
+        GetSwipeWindowX(centerX, out var rightEdge, out var leftEdge);
+        var hasUnresolvedPrompt = false;
+        for (var i = 0; i < _activeBars.Count; i++)
+        {
+            var state = _activeBars[i];
+            if (!state.IsAlive || state.Resolved)
+                continue;
+            var x = state.Rect.anchoredPosition.x;
+            if (x >= leftEdge && x <= rightEdge)
+            {
+                hasUnresolvedPrompt = true;
+                break;
+            }
+        }
+
+        _targetZoneImage.color = hasUnresolvedPrompt ? _targetZoneActiveColor : _targetZoneIdleColor;
     }
 
     private ActiveBarState FindSwipeCandidate(SwipeDirection direction)
@@ -237,17 +302,20 @@ public class WarriorTimingMiniGame : MonoBehaviour
         }
 
         _activeBars.Clear();
+        RefreshTargetZone();
     }
 
     private bool ValidateReferences()
     {
         var ok = _laneRect != null &&
                  _barPrefab != null &&
+                 _targetZone != null &&
+                 _targetZoneImage != null &&
                  _inputSource != null;
         if (ok || _missingRefsLogged)
             return ok;
 
-        Debug.LogWarning("WarriorTimingMiniGame is not configured: laneRect/barPrefab/inputSource required.");
+        Debug.LogWarning("WarriorTimingMiniGame is not configured: lane, target zone, bar prefab and input source are required.");
         _missingRefsLogged = true;
         return false;
     }
@@ -262,32 +330,6 @@ public class WarriorTimingMiniGame : MonoBehaviour
     {
         if (_inputSource != null)
             _inputSource.FrontFaceSwipePerformed -= OnFrontFaceSwipe;
-    }
-
-    private void OnDrawGizmos()
-    {
-        if (_laneRect == null)
-            return;
-
-        var rect = _laneRect.rect;
-        var centerX = (rect.xMin + rect.xMax) * 0.5f;
-        GetSwipeWindowX(centerX, out var rightSwipeStartX, out var leftSwipeEndX);
-
-        DrawLaneVerticalLine(centerX, Color.yellow);
-        DrawLaneVerticalLine(rightSwipeStartX, Color.cyan);
-        DrawLaneVerticalLine(leftSwipeEndX, Color.red);
-
-        DrawLaneVerticalLine(rect.xMin, new Color(1f, 1f, 1f, 0.6f));
-        DrawLaneVerticalLine(rect.xMax, new Color(1f, 1f, 1f, 0.6f));
-    }
-
-    private void DrawLaneVerticalLine(float localX, Color color)
-    {
-        var rect = _laneRect.rect;
-        var from = _laneRect.TransformPoint(new Vector3(localX, rect.yMin, 0f));
-        var to = _laneRect.TransformPoint(new Vector3(localX, rect.yMax, 0f));
-        Gizmos.color = color;
-        Gizmos.DrawLine(from, to);
     }
 
     private void GetSwipeWindowX(float centerX, out float rightSwipeStartX, out float leftSwipeEndX)
